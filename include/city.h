@@ -3,16 +3,18 @@ using std::string;
 #include <iostream>
 using std::cout;
 
+
 struct City
 {
-	std::string name;
-	int x;
-	int y;
+    std::string name;
+    double x_axis;
+    double y_axis;
 
-	bool operator<(const City& city) const;
+	City(const std::string& name, double x_axis, double y_axis);
+
+    // Comparison operator for ordering cities based on their names
+	bool operator<(const City& other) const;
+
+    // Print function to display the city information
 	void print() const;
-	// ctor:
-	City(string name, int x_axit, int y_axis);
-
 };
-

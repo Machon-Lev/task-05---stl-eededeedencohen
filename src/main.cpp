@@ -1,10 +1,16 @@
-#include <iostream>
-
+#include "citiesMap.h"
 
 int main() {
+    CitiesMap map("data.txt");
 
-	std::cout << "hello world" << std::endl;
+    //print city:
+    map.printCity("Gifford, IL");
 
-	system("pause");
-	return 0;
+    cout << "================================" << std::endl;
+    cout << "================================" << std::endl;
+
+    map.printNearbyCities("Gifford, IL", 3);
+
+    system("pause");
+    return 0;
 }

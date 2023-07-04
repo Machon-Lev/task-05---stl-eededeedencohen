@@ -1,20 +1,16 @@
-#pragma once
 #include "city.h"
 
-City::City(string name, int x_axit, int y_axis)
-{
-	this->name = name;
-	this->x = x_axit;
-	this->y = y_axis;
+City::City(const std::string& name, double x_axis, double y_axis)
+    : name(name), x_axis(x_axis), y_axis(y_axis) {}
+
+bool City::operator<(const City& other) const {
+    if (y_axis == other.y_axis) {
+        return name < other.name;
+    }
+    return y_axis < other.y_axis;
 }
 
-bool City::operator<(const City& city) const
-{
-	return y < city.y;
-}
 
-void City::print() const
-{
-	cout << name << " (" << x << ", " << y << ")\n";
+void City::print() const {
+    std::cout << "City: " << name << ", X-Axis: " << x_axis << ", Y-Axis: " << y_axis << std::endl;
 }
-
