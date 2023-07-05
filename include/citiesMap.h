@@ -39,8 +39,18 @@ public:
     // print Nearby Cities:
     void printNearbyCities(const std::string& name, double distance) const;
 
+    // Euclidean distance - l2 norm:
+    double euclideanDistance(const City& city1, const City& city2) const;
+
+    // Manhattan distance - l1 norm:
+    double manhattanDistance(const City& city1, const City& city2) const;
+
+    // l infinity norm:
+    double infinityNorm(const City& city1, const City& city2) const;
 
 };
+
+
 
 
 

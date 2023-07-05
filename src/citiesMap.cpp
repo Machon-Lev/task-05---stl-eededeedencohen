@@ -150,16 +150,32 @@ void CitiesMap::printNearbyCities(const std::string& name, double distance) cons
     // copy the Y axis of the city:
     double cityYAxis = cityInSetIterator->y_axis;
 
-    // the begin is the iterator to the city: 
-    auto nearest_city_oustide_range_Iterator = std::find_if_not(cityInSetIterator, citySet.end(), [cityYAxis, distance](const City& city) {
-        // print the distance between the city and the city in the map:
+    auto nearest_city_set = std::set<City>();
+
+    City centerCity = *cityInSetIterator;
+
+    auto nearest_city_oustide_range_Iterator = std::find_if_not(cityInSetIterator, citySet.end(), [this, centerCity, &nearest_city_set, cityYAxis, distance](const City& city) {
+        if (this->euclideanDistance(centerCity, city) <= distance) {
+            city.print();
+            cout<< "Euclidean Distance: " << this->euclideanDistance(centerCity, city) << std::endl;
+			nearest_city_set.insert(city);
+		}
         return (city.y_axis - cityYAxis) <= distance; // return true if the city is in the range.
         });
+}
 
-    // print ol the cities in the range:
-    cout << std::all_of(cityInSetIterator, nearest_city_oustide_range_Iterator, [cityYAxis, distance](const City& city) {
-        city.print();
-        cout << "Distance: " << city.y_axis - cityYAxis << std::endl;
-        return true;
-        });
+
+// euclideanDistance implementation:
+double CitiesMap::euclideanDistance(const City& city1, const City& city2) const {
+    return sqrt(pow(city1.x_axis - city2.x_axis, 2) + pow(city1.y_axis - city2.y_axis, 2));
+}
+
+// manhattanDistance implementation:
+double CitiesMap::manhattanDistance(const City& city1, const City& city2) const {
+    return abs(city1.x_axis - city2.x_axis) + abs(city1.y_axis - city2.y_axis);
+}
+
+// infinityNorm implementation:
+double CitiesMap::infinityNorm(const City& city1, const City& city2) const {
+    return std::max(abs(city1.x_axis - city2.x_axis), abs(city1.y_axis - city2.y_axis));
 }
