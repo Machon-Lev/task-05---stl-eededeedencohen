@@ -4,7 +4,7 @@ int main() {
     CitiesMap map("data.txt");
 
     //print city:
-    map.printCity("Gifford, IL");
+    //map.printCity("Gifford, IL");
 
     cout << "================================" << std::endl;
     cout << "================================" << std::endl;

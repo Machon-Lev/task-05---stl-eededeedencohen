@@ -17,4 +17,7 @@ struct City
 
     // Print function to display the city information
 	void print() const;
+
+    // print city name:
+    void printName() const;
 };

@@ -14,3 +14,9 @@ bool City::operator<(const City& other) const {
 void City::print() const {
     std::cout << "City: " << name << ", X-Axis: " << x_axis << ", Y-Axis: " << y_axis << std::endl;
 }
+
+void City::printName() const {
+	std::cout<<  this->name << std::endl;
+}
+
+
