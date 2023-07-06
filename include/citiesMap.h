@@ -12,6 +12,9 @@ class CitiesMap
 private:
     std::set<City> citySet; // set of cities
     std::unordered_map<std::string, std::set<City>::iterator> cityMap;
+    // unordered_map - key is int (function number) and value is a pointer to the function
+    std::unordered_map<int, double (CitiesMap::*)(const City&, const City&) const> functionMap;  // pointer to member function
+
 
 public:
 
@@ -37,7 +40,7 @@ public:
     void printAllCities() const;
 
     // print Nearby Cities:
-    void printNearbyCities(const std::string& name, double distance) const;
+    void printNearbyCities(const std::string& name, double distance, int functionNumber) const;
 
     // Euclidean distance - l2 norm:
     double euclideanDistance(const City& city1, const City& city2) const;
@@ -49,6 +52,10 @@ public:
     double infinityNorm(const City& city1, const City& city2) const;
 
 };
+
+
+
+
 
 
 

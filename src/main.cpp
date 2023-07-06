@@ -9,7 +9,7 @@ int main() {
     cout << "================================" << std::endl;
     cout << "================================" << std::endl;
 
-    map.printNearbyCities("Gifford, IL", 3);
+    map.printNearbyCities("Gifford, IL", 3, 2);
 
     system("pause");
     return 0;

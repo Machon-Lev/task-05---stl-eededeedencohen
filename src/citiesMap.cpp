@@ -4,11 +4,16 @@
 
 
 CitiesMap::CitiesMap() {
-    cout << "cities Map created" << std::endl;
+    functionMap.insert({ 0, &CitiesMap::euclideanDistance });
+    functionMap.insert({ 1, &CitiesMap::manhattanDistance });
+    functionMap.insert({ 2, &CitiesMap::infinityNorm });
 }
 
 CitiesMap::CitiesMap(const std::string& filename) {
     readCitiesFromFile(filename);
+        functionMap.insert({ 0, &CitiesMap::euclideanDistance });
+    functionMap.insert({ 1, &CitiesMap::manhattanDistance });
+    functionMap.insert({ 2, &CitiesMap::infinityNorm });
 }
 
 void CitiesMap::addCity(const std::string& name, double x_axis, double y_axis)
@@ -139,7 +144,7 @@ void CitiesMap::printCity(const std::string& name) const {
 //==================================
 // PRINT NEARBY CITIES FUNCTION
 //==================================
-void CitiesMap::printNearbyCities(const std::string& name, double distance) const {
+void CitiesMap::printNearbyCities(const std::string& name, double distance, int functionNumber) const {
 
     // find the city in map:
     auto cityInMapIterator = cityMap.find(name); //iterator to pair: <city name, iterator to the city in the set> 
@@ -150,21 +155,27 @@ void CitiesMap::printNearbyCities(const std::string& name, double distance) cons
         return;
     }
 
+
+
+
     // comperator: compare by Euclidean Distance from the center city:
-    auto comperator = [this, cityInMapIterator](const City& city1, const City& city2) {
-        if (this->euclideanDistance(*cityInMapIterator->second, city1) == this->euclideanDistance(*cityInMapIterator->second, city2))
+    auto comparator = [this, cityInMapIterator, functionNumber](const City& city1, const City& city2) {
+        double dist1 = (this->*functionMap.at(functionNumber))(*cityInMapIterator->second, city1);
+        double dist2 = (this->*functionMap.at(functionNumber))(*cityInMapIterator->second, city2);
+        if (dist1 == dist2)
         {
-			return city1.name < city2.name;
-		}
-        return this->euclideanDistance(*cityInMapIterator->second, city1) < this->euclideanDistance(*cityInMapIterator->second, city2);
-	};
+            return city1.name < city2.name;
+        }
+        return dist1 < dist2;
+    };
 
 
     // copy iterator of the center city:
     std::set<City>::iterator centerCityIterator = cityInMapIterator->second;
 
     // will contain cities that are in the range:
-    auto nearest_city_set =  std::set<City, decltype(comperator)>(comperator);
+      auto nearest_city_set = std::set<City, decltype(comparator)>(comparator);
+
 
     // copy of the center city:
     City centerCity = *centerCityIterator;
@@ -182,12 +193,13 @@ void CitiesMap::printNearbyCities(const std::string& name, double distance) cons
     auto centerCityReverseIterator = std::make_reverse_iterator(centerCityIterator);
     
 
-    auto nearest_northernCity_outside_range_Iterator = std::find_if_not(centerCityReverseIterator, citySet.rend(), [this, centerCity, &nearest_city_set, &north_cities_inside_range, distance](const City& city) {
-        if (this->euclideanDistance(centerCity, city) <= distance) {
+    auto nearest_northernCity_outside_range_Iterator = std::find_if_not(centerCityReverseIterator, citySet.rend(), [this, centerCity, &nearest_city_set, &north_cities_inside_range, distance, functionNumber](const City& city) {
+        double dist = (this->*functionMap.at(functionNumber))(centerCity, city);
+        if (dist <= distance) {
             nearest_city_set.insert(city);
             north_cities_inside_range++;
         }
-        return (centerCity.y_axis - city.y_axis) <= distance; // return true if the city is in the range.
+        return city.y_axis >= centerCity.y_axis - distance; // check if city's y-axis is in the north range.
         });
 
         
@@ -207,14 +219,15 @@ void CitiesMap::printNearbyCities(const std::string& name, double distance) cons
 
     int south_cities_inside_range = 0;
     
-    
-    auto nearest_southernCity_outside_range_Iterator = std::find_if_not(centerCityIterator, citySet.end(), [this, centerCity, &nearest_city_set, &south_cities_inside_range, distance](const City& city) {
-        if (this->euclideanDistance(centerCity, city) <= distance) {
+    auto nearest_southernCity_outside_range_Iterator = std::find_if_not(centerCityIterator, citySet.end(), [this, centerCity, &nearest_city_set, &south_cities_inside_range, distance, functionNumber](const City& city) {
+        double distanceFronCenterCity = (this->*functionMap.at(functionNumber))(centerCity, city);
+        if (distanceFronCenterCity <= distance) {
             nearest_city_set.insert(city);
             south_cities_inside_range++;
         }
-        return (city.y_axis - centerCity.y_axis) <= distance; // return true if the city is in the range.
+        return city.y_axis <= centerCity.y_axis + distance; // check if city's y-axis is in the south range.
         });
+
 
     // print the number of cities in the range:
     std::cout << nearest_city_set.size() <<  " city/cities found in the given radius." << std::endl;
@@ -225,27 +238,12 @@ void CitiesMap::printNearbyCities(const std::string& name, double distance) cons
 
     // print all the cities in the set:
     std::cout << "City list:" << std::endl;
-    int nearCities = std::count_if(nearest_city_set.cbegin(), nearest_city_set.cend(), [this, centerCity, &nearest_city_set, distance](const City& city) {
+    int nearCities = std::count_if(nearest_city_set.cbegin(), nearest_city_set.cend(), [this, centerCity, &nearest_city_set, distance, functionNumber](const City& city) {
         city.printName();
-        std::cout << "Euclidean Distance: " << this->euclideanDistance(centerCity, city) << std::endl;
+        std::cout << "Distance: " << (this->*functionMap.at(functionNumber))(centerCity, city) << std::endl;
         return true;
-		});
-        
-    /*
-    if (nearCities == 0) {
-        std::cout << "No cities were found in range." << std::endl;
-	}
-    else {
-        cout << "Number of cities found in range (count_if when printing): " << nearCities << std::endl;
-        cout << "Number of cities found in range - set.size()" << nearest_city_set.size() << std::endl;
-        cout << "============================" << std::endl;
-        cout << "Number of ''NORTH'' cities found in range: " << north_cities_inside_range << std::endl;
-        cout << "Number of ''SOUTH'' cities found in range : " << south_cities_inside_range << std::endl;
-        // print the Y axis of the center city:
-        cout << "Center city : ";
-        centerCity.print();
-    }
-    */
+        });
+       
 }
 
 
@@ -263,3 +261,66 @@ double CitiesMap::manhattanDistance(const City& city1, const City& city2) const 
 double CitiesMap::infinityNorm(const City& city1, const City& city2) const {
     return std::max(abs(city1.x_axis - city2.x_axis), abs(city1.y_axis - city2.y_axis));
 }
+
+
+/*
+void CitiesMap::printNearbyCities(const std::string& name, double distance, int functionNumber) const {
+
+    // find the city in map:
+    auto cityInMapIterator = cityMap.find(name);
+
+    // case the given city is not in the map:
+    if (cityInMapIterator == cityMap.end())
+    {
+        return;
+    }
+
+    // comparator: compare by Distance from the center city:
+    auto comparator = [this, cityInMapIterator, functionNumber](const City& city1, const City& city2) {
+        double dist1 = (this->*functionMap.at(functionNumber))(*cityInMapIterator->second, city1);
+        double dist2 = (this->*functionMap.at(functionNumber))(*cityInMapIterator->second, city2);
+        if (dist1 == dist2)
+        {
+            return city1.name < city2.name;
+        }
+        return dist1 < dist2;
+    };
+
+    auto nearest_city_set = std::set<City, decltype(comparator)>(comparator);
+
+    int north_cities_inside_range = 0;
+    auto centerCityReverseIterator = std::make_reverse_iterator(cityInMapIterator->second);
+
+    auto nearest_northernCity_outside_range_Iterator = std::find_if_not(centerCityReverseIterator, citySet.rend(), [this, &nearest_city_set, &north_cities_inside_range, distance, functionNumber](const City& city) {
+        double dist = (this->*functionMap.at(functionNumber))(*cityInMapIterator->second, city);
+        if (dist <= distance) {
+            nearest_city_set.insert(city);
+            north_cities_inside_range++;
+        }
+        return dist <= distance;
+    });
+
+    int south_cities_inside_range = 0;
+    auto centerCityIterator = std::next(cityInMapIterator->second);
+
+    auto nearest_southernCity_outside_range_Iterator = std::find_if_not(centerCityIterator, citySet.end(), [this, &nearest_city_set, &south_cities_inside_range, distance, functionNumber](const City& city) {
+        double dist = (this->*functionMap.at(functionNumber))(*cityInMapIterator->second, city);
+        if (dist <= distance) {
+            nearest_city_set.insert(city);
+            south_cities_inside_range++;
+        }
+        return dist <= distance;
+    });
+
+    std::cout << nearest_city_set.size() <<  " city/cities found in the given radius." << std::endl;
+    std::cout << north_cities_inside_range << " cities are to the north of the selected city." << std::endl;
+
+    std::cout << "City list:" << std::endl;
+    std::for_each(nearest_city_set.cbegin(), nearest_city_set.cend(), [this, functionNumber](const City& city) {
+        city.printName();
+        std::cout << "Distance: " << (this->*functionMap.at(functionNumber))(*cityInMapIterator->second, city) << std::endl;
+    });
+
+}
+
+*/
