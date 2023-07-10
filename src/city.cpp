@@ -10,6 +10,10 @@ bool City::operator<(const City& other) const {
     return y_axis < other.y_axis;
 }
 
+std::string City::getName() const {
+	return name;
+}
+
 
 void City::print() const {
     std::cout << "City: " << name << ", X-Axis: " << x_axis << ", Y-Axis: " << y_axis << std::endl;

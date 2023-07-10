@@ -15,6 +15,9 @@ struct City
     // Comparison operator for ordering cities based on their names
 	bool operator<(const City& other) const;
 
+    // get the name of the city
+    string getName() const;
+
     // Print function to display the city information
 	void print() const;
 

@@ -3,13 +3,9 @@
 int main() {
     CitiesMap map("data.txt");
 
-    //print city:
-    //map.printCity("Gifford, IL");
+    // map.printNearbyCities("Gifford, IL", 3, 2);
+    map.printAllCities();
 
-    cout << "================================" << std::endl;
-    cout << "================================" << std::endl;
-
-    map.printNearbyCities("Gifford, IL", 3, 2);
 
     system("pause");
     return 0;

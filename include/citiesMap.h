@@ -1,6 +1,7 @@
 #pragma once
 #include "city.h" // struct of City
 #include <iostream>
+using std::cin;
 #include <string>
 #include <set>
 #include <unordered_map>
@@ -10,10 +11,15 @@
 class CitiesMap
 {
 private:
-    std::set<City> citySet; // set of cities
+
+    // set of cities - ordered by y_axis fron the smallest to the biggest (if y_axis is equal, ordered by name)
+    std::set<City> citySet;
+
+    // unordered_map - key is city name and value is a iterator to the city in the citySet 
     std::unordered_map<std::string, std::set<City>::iterator> cityMap;
-    // unordered_map - key is int (function number) and value is a pointer to the function
-    std::unordered_map<int, double (CitiesMap::*)(const City&, const City&) const> functionMap;  // pointer to member function
+
+    // unordered_map - key is number of distance function and value is a pointer to the function
+    std::unordered_map<int, double (CitiesMap::*)(const City&, const City&) const> distance_function_map; 
 
 
 public:
@@ -24,16 +30,22 @@ public:
     // ctor of CitiesMap from file:
     CitiesMap(const std::string& filename);
 
-    // add new city
+    // return true if the city exists in the dataset:
+    bool isCityExists(const std::string& name) const;
+
+    // return the city by name:
+    City getCity(const std::string& name) const;
+
+    // add new city:
     void addCity(const std::string& name, double x_axis, double y_axis);
 
-    // delete a city
+    // delete a city:
     void deleteCity(const std::string& name);
 
     // add cities from file:
     void readCitiesFromFile(const std::string& filename);
 
-    // print a city by name:
+    // print a city details by name:
     void printCity(const std::string& name) const;
 
     // print all cities:
@@ -42,16 +54,36 @@ public:
     // print Nearby Cities:
     void printNearbyCities(const std::string& name, double distance, int functionNumber) const;
 
+
+
+    //========================
+    //  DISTANCE FUNCTIONS
+    //========================
+    
     // Euclidean distance - l2 norm:
     double euclideanDistance(const City& city1, const City& city2) const;
 
     // Manhattan distance - l1 norm:
     double manhattanDistance(const City& city1, const City& city2) const;
 
-    // l infinity norm:
+    // Infinity norm distance - l-infinity norm:
     double infinityNorm(const City& city1, const City& city2) const;
 
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
