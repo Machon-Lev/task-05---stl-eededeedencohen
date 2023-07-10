@@ -7,9 +7,9 @@
 // ctor of CitiesMap:
 CitiesMap::CitiesMap() {
     // inserting the distance functions to the map
-    distance_function_map.insert({ 0, &CitiesMap::euclideanDistance });
-    distance_function_map.insert({ 1, &CitiesMap::manhattanDistance });
-    distance_function_map.insert({ 2, &CitiesMap::infinityNorm });
+    _distanceFunctionMap.insert({ 0, &CitiesMap::euclideanDistance });
+    _distanceFunctionMap.insert({ 1, &CitiesMap::manhattanDistance });
+    _distanceFunctionMap.insert({ 2, &CitiesMap::infinityNorm });
 }
 
 // ctor of CitiesMap from file:
@@ -19,19 +19,19 @@ CitiesMap::CitiesMap(const std::string& filename) {
     readCitiesFromFile(filename);
 
     // inserting the distance functions to the map
-    distance_function_map.insert({ 0, &CitiesMap::euclideanDistance });
-    distance_function_map.insert({ 1, &CitiesMap::manhattanDistance });
-    distance_function_map.insert({ 2, &CitiesMap::infinityNorm });
+    _distanceFunctionMap.insert({ 0, &CitiesMap::euclideanDistance });
+    _distanceFunctionMap.insert({ 1, &CitiesMap::manhattanDistance });
+    _distanceFunctionMap.insert({ 2, &CitiesMap::infinityNorm });
 }
 
 // return true if the city exists in the dataset:
 bool CitiesMap::isCityExists(const std::string& name) const {
-	return cityMap.find(name) != cityMap.end();
+	return _cityMap.find(name) != _cityMap.end();
 }
 
 // using this function when we know that the city exists in the map
 City CitiesMap::getCity(const std::string& name) const {
-	auto cityInMapIterator = cityMap.find(name); 
+	auto cityInMapIterator = _cityMap.find(name); 
 	return *cityInMapIterator->second; 
 }
 
@@ -48,10 +48,10 @@ void CitiesMap::addCity(const std::string& name, double x_axis, double y_axis)
     City city(name, x_axis, y_axis);
 
     // Insert the city into the set and store the iterator
-    auto result = citySet.insert(city); // result is a pair: <iterator, bool>.  
+    auto result = _citySet.insert(city); // result is a pair: <iterator, bool>.  
     if (result.second) { // if the city inserted successfully
         // Insert the city into the map
-        cityMap.insert({ name, result.first });
+        _cityMap.insert({ name, result.first });
     }
 }
 
@@ -59,19 +59,19 @@ void CitiesMap::addCity(const std::string& name, double x_axis, double y_axis)
 void CitiesMap::deleteCity(const std::string& name)
 {
     // find the city in map:
-    auto cityInMapIterator = cityMap.find(name); // the iterator in the map 
+    auto cityInMapIterator = _cityMap.find(name); // the iterator in the map 
 
     // checking if the city is in the map:
-    if (cityInMapIterator != cityMap.end()) // case the city is in the unordered_map structure
+    if (cityInMapIterator != _cityMap.end()) // case the city is in the unordered_map structure
     {
         // copy the iterator from the map to the set:
         std::set<City>::iterator cityInSetIterator = cityInMapIterator->second;
 
         // erase the city from the set:
-        citySet.erase(cityInSetIterator); // run time is O(1) because the iterator points to the city in the set
+        _citySet.erase(cityInSetIterator); // run time is O(1) because the iterator points to the city in the set
 
         // erase the city from the map:
-        cityMap.erase(cityInMapIterator); // run time is O(1) for map deletion
+        _cityMap.erase(cityInMapIterator); // run time is O(1) for map deletion
     }
 }
 
@@ -117,7 +117,7 @@ void CitiesMap::readCitiesFromFile(const std::string& filename) {
                 }
 
                 // add the city to the map if the city is not already in the map:
-                if (cityMap.find(cityName) == cityMap.end()) {
+                if (_cityMap.find(cityName) == _cityMap.end()) {
                     addCity(cityName, x, y);
                 }
                 else {
@@ -143,9 +143,9 @@ void CitiesMap::readCitiesFromFile(const std::string& filename) {
 // print all the cities in the dataset:
 void CitiesMap::printAllCities() const {
 
-    std::set<City>::iterator it = citySet.begin();
+    std::set<City>::iterator it = _citySet.begin();
    
-    int num_of_cities = std::count_if(citySet.begin(), citySet.end(), [&it](const City& city) {
+    int num_of_cities = std::count_if(_citySet.begin(), _citySet.end(), [&it](const City& city) {
 		city.print();
 		return true;
 	});
@@ -158,10 +158,10 @@ void CitiesMap::printAllCities() const {
 void CitiesMap::printCity(const std::string& name) const {
 
     // find the city in map:
-    auto cityInMapIterator = cityMap.find(name); // the iterator in the map 
+    auto cityInMapIterator = _cityMap.find(name); // the iterator in the map 
 
     // checking if the city is in the map:
-    if (cityInMapIterator != cityMap.end()) // case the city is in the unordered_map structure
+    if (cityInMapIterator != _cityMap.end()) // case the city is in the unordered_map structure
     {
         // copy the iterator from the map to the set:
         std::set<City>::iterator cityInSetIterator = cityInMapIterator->second;
@@ -182,18 +182,18 @@ void CitiesMap::printCity(const std::string& name) const {
 void CitiesMap::printNearbyCities(const std::string& name, double distance, int functionNumber) const {
 
     // find the city in map:
-    auto cityInMapIterator = cityMap.find(name); //iterator to pair: <city name, iterator to the city in the set> 
+    auto cityInMapIterator = _cityMap.find(name); //iterator to pair: <city name, iterator to the city in the set> 
 
     // case the given city is not in the map:
-    if (cityInMapIterator == cityMap.end())
+    if (cityInMapIterator == _cityMap.end())
     {
         return;
     }
 
     // comperator - will be used to sort the set of cities by distance from the center city:
     auto comparator = [this, cityInMapIterator, functionNumber](const City& city1, const City& city2) {
-        double dist1 = (this->*distance_function_map.at(functionNumber))(*cityInMapIterator->second, city1);
-        double dist2 = (this->*distance_function_map.at(functionNumber))(*cityInMapIterator->second, city2);
+        double dist1 = (this->*_distanceFunctionMap.at(functionNumber))(*cityInMapIterator->second, city1);
+        double dist2 = (this->*_distanceFunctionMap.at(functionNumber))(*cityInMapIterator->second, city2);
         if (dist1 == dist2)
         {
             return city1.name < city2.name;
@@ -220,8 +220,8 @@ void CitiesMap::printNearbyCities(const std::string& name, double distance, int 
     auto centerCityReverseIterator = std::make_reverse_iterator(centerCityIterator);
     
 
-    auto nearest_northernCity_outside_range_Iterator = std::find_if_not(centerCityReverseIterator, citySet.rend(), [this, centerCity, &nearest_city_set, &north_cities_inside_range, distance, functionNumber](const City& city) {
-        double distanceFronCenterCity = (this->*distance_function_map.at(functionNumber))(centerCity, city);
+    auto nearest_northernCity_outside_range_Iterator = std::find_if_not(centerCityReverseIterator, _citySet.rend(), [this, centerCity, &nearest_city_set, &north_cities_inside_range, distance, functionNumber](const City& city) {
+        double distanceFronCenterCity = (this->*_distanceFunctionMap.at(functionNumber))(centerCity, city);
         if (distanceFronCenterCity <= distance) {
             nearest_city_set.insert(city);
             north_cities_inside_range++;
@@ -242,8 +242,8 @@ void CitiesMap::printNearbyCities(const std::string& name, double distance, int 
 
     int south_cities_inside_range = 0;
     
-    auto nearest_southernCity_outside_range_Iterator = std::find_if_not(centerCityIterator, citySet.end(), [this, centerCity, &nearest_city_set, &south_cities_inside_range, distance, functionNumber](const City& city) {
-        double distanceFronCenterCity = (this->*distance_function_map.at(functionNumber))(centerCity, city);
+    auto nearest_southernCity_outside_range_Iterator = std::find_if_not(centerCityIterator, _citySet.end(), [this, centerCity, &nearest_city_set, &south_cities_inside_range, distance, functionNumber](const City& city) {
+        double distanceFronCenterCity = (this->*_distanceFunctionMap.at(functionNumber))(centerCity, city);
         if (distanceFronCenterCity <= distance) {
             nearest_city_set.insert(city);
             south_cities_inside_range++;
@@ -263,7 +263,7 @@ void CitiesMap::printNearbyCities(const std::string& name, double distance, int 
     std::cout << "City list:" << std::endl;
     int nearCities = std::count_if(nearest_city_set.cbegin(), nearest_city_set.cend(), [this, centerCity, &nearest_city_set, distance, functionNumber](const City& city) {
         city.printName();
-        std::cout << "Distance: " << (this->*distance_function_map.at(functionNumber))(centerCity, city) << std::endl;
+        std::cout << "Distance: " << (this->*_distanceFunctionMap.at(functionNumber))(centerCity, city) << std::endl;
         return true;
         });
 }

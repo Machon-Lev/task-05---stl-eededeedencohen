@@ -12,25 +12,30 @@ using std::cin;
 class CitiesMap
 {
 private:
+    //==========================
+    // DATA MEMBERS OF CitiesMap
+    //==========================
 
     // set of cities - ordered by y_axis fron the smallest to the biggest (if y_axis is equal, ordered by name)
-    std::set<City> citySet;
+    std::set<City> _citySet;
 
     // unordered_map - key is city name and value is a iterator to the city in the citySet 
-    std::unordered_map<std::string, std::set<City>::iterator> cityMap;
+    std::unordered_map<std::string, std::set<City>::iterator> _cityMap;
 
     // unordered_map - key is number of distance function and value is a pointer to the function
-    std::unordered_map<int, double (CitiesMap::*)(const City&, const City&) const> distance_function_map; 
+    std::unordered_map<int, double (CitiesMap::*)(const City&, const City&) const> _distanceFunctionMap; 
 
-
+    //========================
+    // METHODES OF CitiesMap
+    //========================
 public:
-
     // ctor of CitiesMap:
     CitiesMap();
 
     // ctor of CitiesMap from file:
     CitiesMap(const std::string& filename);
 
+private:
     // return true if the city exists in the dataset:
     bool isCityExists(const std::string& name) const;
 
