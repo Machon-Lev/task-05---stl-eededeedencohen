@@ -163,7 +163,7 @@ void CitiesMap::printNearbyCities(const std::string& name, double distance, int 
         return;
     }
 
-    // comperator - ordered the set by a 
+    // comperator - will be used to sort the set of cities by distance from the center city:
     auto comparator = [this, cityInMapIterator, functionNumber](const City& city1, const City& city2) {
         double dist1 = (this->*distance_function_map.at(functionNumber))(*cityInMapIterator->second, city1);
         double dist2 = (this->*distance_function_map.at(functionNumber))(*cityInMapIterator->second, city2);
@@ -178,21 +178,16 @@ void CitiesMap::printNearbyCities(const std::string& name, double distance, int 
     // copy iterator of the center city:
     std::set<City>::iterator centerCityIterator = cityInMapIterator->second;
 
-    // will contain cities that are in the range:
+    // will contain cities that are in the range ordered by distance from the center city:
       auto nearest_city_set = std::set<City, decltype(comparator)>(comparator);
-
 
     // copy of the center city:
     City centerCity = *centerCityIterator;
 
 
-    //---------------------------------------------------
-    // * Scaning the set from the center city to the north:
-    //   form the center city to the begining of the set.
-    // 
-    // * breack when gettind to the first city 
-    //   that the y axis is not in the range.
-    //---------------------------------------------------
+    //-----------------------------------------------------
+    // Scaning the set from the center city to the north:
+    //-----------------------------------------------------
     int north_cities_inside_range = 0;
 
     auto centerCityReverseIterator = std::make_reverse_iterator(centerCityIterator);
@@ -208,14 +203,10 @@ void CitiesMap::printNearbyCities(const std::string& name, double distance, int 
         });
 
         
-    //---------------------------------------------------
-    // * Scaning the set from the center city to the south:
-    //   form the center city to the end of the set.
-    //
-    // * breack when gettind to the first city
-    //   that the y axis is not in the range.
-    //---------------------------------------------------
-    
+    //----------------------------------------------------
+    // Scaning the set from the center city to the south:
+    //----------------------------------------------------
+
     // copy the iterator of the center city from the map to the set:
     centerCityIterator = cityInMapIterator->second;
 
@@ -268,7 +259,219 @@ double CitiesMap::infinityNorm(const City& city1, const City& city2) const {
 
 
 
+//============================================
+// User Interface Functions - Implementation:
+//============================================
 
+// run the program:
+void CitiesMap::run()
+{
+    int option;
+    do
+    {   // clear the console:
+        system("cls");
+
+        print_main_menu();
+        option = get_option_from_user(0, 4);
+        switch (option)
+        {
+        case 1:
+            add_city_user_interface();
+            break;
+        case 2:
+            delete_city_user_interface();
+            break;
+        case 3:
+            search_city_user_interface();
+            break;
+        case 4:
+            search_nearby_cities_user_interface();
+            break;
+        case 0:
+            return;
+        default:
+            break;
+        }
+    } while (option != 0);
+}
+
+// print main menu:
+void CitiesMap::print_main_menu() const
+{
+    std::cout << "Please choose one of the following options. than, press enter." << std::endl;
+    std::cout << "1. Add a city" << std::endl;
+    std::cout << "2. Delete a city" << std::endl;
+    std::cout << "3. Search for a city" << std::endl;
+    std::cout << "4. Search for nearby cities" << std::endl << std::endl;
+    std::cout << "0. Exit" << std::endl;
+}
+
+// get option from user:
+int CitiesMap::get_option_from_user(int min, int max) const
+{
+    int option;
+    std::cin >> option;
+    if (option < min || option > max)
+    {
+        return -1; // incalid option
+    }
+    return option;
+}
+
+// add city user interface:
+void CitiesMap::add_city_user_interface()
+{
+    std::string name;
+    std::cout << "Please enter the city name. than, press enter." << std::endl;
+
+    std::cin.ignore(); // ignore the enter from the previous input
+
+    std::getline(std::cin, name); // get the name from the user
+
+    if (isCityExists(name))
+    {
+        std::cout << name << " already exists in the dataset." << std::endl;
+
+        // get the enter from the user to return from the function
+        std::cout << "Press enter to return to main menu." << std::endl;
+        std::cin.ignore(); // ignore the enter from the previous input
+        std::cin.get();
+
+        return;
+    }
+
+    double x_axis = -1, y_axis = -1;
+    std::cout << "Please enter the city coordinates (positive numbers separated by space). then, press enter." << std::endl;
+
+    // Ignore all the spaces and tabs before the input
+    std::cin >> x_axis;
+    std::cin >> y_axis;
+
+    while (x_axis < 0 || y_axis < 0)
+    {
+        std::cout << "Invalid coordinates. Please enter the city coordinates (positive numbers separated by space). then, press enter." << std::endl;
+        std::cin >> x_axis;
+        std::cin >> y_axis;
+    }
+
+
+    addCity(name, x_axis, y_axis);
+
+    std::cout << "The city '" << name << "' was added successfully." << std::endl;
+
+    // pressing enter to return to main menu:
+    std::cout << "Press enter to return to main menu." << std::endl;
+
+    std::cin.ignore(); // ignore the enter from the previous input
+    std::cin.get(); // get the enter from the user
+    return;
+}
+
+// delete city user interface:
+void CitiesMap::delete_city_user_interface()
+{
+    std::string name;
+    std::cout << "Please enter the city name to delete. than, press enter." << std::endl;
+    std::cin.ignore(); // ignore the enter from the previous input
+    std::getline(std::cin, name); // get the name from the user
+    if (!isCityExists(name))
+    {
+        std::cout << name << " does not exists in the dataset." << std::endl;
+        // get the enter from the user to return from the function
+        std::cout << "Press enter to return to main menu." << std::endl;
+        std::cin.get();
+        return;
+    }
+    deleteCity(name);
+    std::cout << "The city '" << name << "' was deleted successfully." << std::endl;
+    // pressing enter to return to main menu:
+    std::cout << "Press enter to return to main menu." << std::endl;
+    std::cin.get(); // get the enter from the user
+    return;
+}
+
+// search for city user interface:
+void CitiesMap::search_city_user_interface()
+{
+    std::string name;
+    std::cout << "Please enter the city name to search. than, press enter." << std::endl;
+    std::cin.ignore(); // ignore the enter from the previous input
+    std::getline(std::cin, name); // get the name from the user
+    if (!isCityExists(name))
+    {
+        std::cout << name << " does not exists in the dataset." << std::endl;
+        // get the enter from the user to return from the function
+        std::cout << "Press enter to return to main menu." << std::endl;
+        std::cin.get();
+        return;
+    }
+    this->printCity(name);
+    // pressing enter to return to main menu:
+    std::cout << "Press enter to return to main menu." << std::endl;
+    std::cin.get(); // get the enter from the user
+    return;
+}
+
+// search for nearby cities user interface:
+void CitiesMap::search_nearby_cities_user_interface()
+{
+    std::string name;
+    std::cout << "Please enter the city name. than, press enter." << std::endl;
+
+    // get the name from the user
+    std::cin.ignore();
+    std::getline(std::cin, name);
+
+    // while the city does not exists in the dataset:
+    while (!isCityExists(name))
+    {
+        if (name == "0")
+        {
+            return;
+        }
+        std::cout << name << " does not exists in the dataset." << std::endl;
+        std::cout << "Please enter the city name. than, press enter." << std::endl;
+        std::getline(std::cin, name);
+    }
+
+    // get the radius from the user
+    double radius;
+    std::cout << "Please enter the radius. than, press enter." << std::endl;
+    std::cin >> radius;
+
+    // while the radius is not positive:
+    while (radius <= 0)
+    {
+        std::cout << "Invalid radius. Please enter the radius. than, press enter." << std::endl;
+        std::cin >> radius;
+    }
+
+    // get the distance type from the user
+    int distance_option;
+    std::cout << "Please choose the distance type. than, press enter." << std::endl;
+    std::cout << "0. Euclidean distance" << std::endl;
+    std::cout << "1. Manhattan distance" << std::endl;
+    std::cout << "2. Chebyshev distance" << std::endl;
+
+    distance_option = get_option_from_user(0, 2); // input between 0 to 2
+
+    // while the distance type is not valid:
+    while (distance_option == -1)
+    {
+        std::cout << "Invalid distance type. Please choose the distance type. than, press enter." << std::endl;
+        std::cout << "0. Euclidean distance" << std::endl;
+        std::cout << "1. Manhattan distance" << std::endl;
+        std::cout << "2. Chebyshev distance" << std::endl;
+        distance_option = get_option_from_user(0, 2); // input between 0 to 2
+    }
+    // print the nearby cities
+    this->printNearbyCities(name, radius, distance_option);
+    // pressing enter to return to main menu:
+    std::cout << "Press enter to return to main menu." << std::endl;
+    std::cin.ignore(); // ignore the enter from the previous input
+    std::cin.get(); // get the enter from the user
+    return;
+}
 
 
 

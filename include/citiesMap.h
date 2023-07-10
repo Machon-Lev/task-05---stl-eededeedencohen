@@ -69,6 +69,23 @@ public:
     // Infinity norm distance - l-infinity norm:
     double infinityNorm(const City& city1, const City& city2) const;
 
+    //==========================
+// User Interface Functions
+//==========================
+    void run();
+
+    void print_main_menu() const;
+
+    void add_city_user_interface();
+
+    void delete_city_user_interface();
+
+    void search_city_user_interface();
+
+    void search_nearby_cities_user_interface();
+
+    int get_option_from_user(int min, int max) const;
+
 };
 
 
