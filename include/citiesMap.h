@@ -84,14 +84,19 @@ public:
 private:
     void print_main_menu() const;
 
-    void add_city_user_interface();
+    // Responsible for adding a city by the user
+    void add_city_user_interface(); 
 
+    // Responsible for deleting a city by the user
     void delete_city_user_interface();
 
+    // Responsible for printing a city by the user
     void search_city_user_interface();
 
+    // Responsible for printing all cities by the user
     void search_nearby_cities_user_interface();
 
+    // Responsible for get range of options from the user
     int get_option_from_user(int min, int max) const;
 
 };
