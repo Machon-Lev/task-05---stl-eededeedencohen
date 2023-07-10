@@ -7,6 +7,7 @@ using std::cin;
 #include <unordered_map>
 #include <fstream>
 #include <sstream>
+#include <filesystem>
 
 class CitiesMap
 {
@@ -69,11 +70,13 @@ public:
     // Infinity norm distance - l-infinity norm:
     double infinityNorm(const City& city1, const City& city2) const;
 
-    //==========================
+//==========================
 // User Interface Functions
 //==========================
+public:
     void run();
 
+private:
     void print_main_menu() const;
 
     void add_city_user_interface();

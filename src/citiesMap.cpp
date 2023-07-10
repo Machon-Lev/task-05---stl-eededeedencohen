@@ -1,8 +1,12 @@
 #include <algorithm>
 #include "citiesMap.h"
+#include <exception>
+#include <filesystem>
+
 
 // ctor of CitiesMap:
 CitiesMap::CitiesMap() {
+    // inserting the distance functions to the map
     distance_function_map.insert({ 0, &CitiesMap::euclideanDistance });
     distance_function_map.insert({ 1, &CitiesMap::manhattanDistance });
     distance_function_map.insert({ 2, &CitiesMap::infinityNorm });
@@ -10,7 +14,11 @@ CitiesMap::CitiesMap() {
 
 // ctor of CitiesMap from file:
 CitiesMap::CitiesMap(const std::string& filename) {
+    
+    // read the cities from a file:
     readCitiesFromFile(filename);
+
+    // inserting the distance functions to the map
     distance_function_map.insert({ 0, &CitiesMap::euclideanDistance });
     distance_function_map.insert({ 1, &CitiesMap::manhattanDistance });
     distance_function_map.insert({ 2, &CitiesMap::infinityNorm });
@@ -41,15 +49,9 @@ void CitiesMap::addCity(const std::string& name, double x_axis, double y_axis)
 
     // Insert the city into the set and store the iterator
     auto result = citySet.insert(city); // result is a pair: <iterator, bool>.  
-    if (result.second) { // if the city was inserted
+    if (result.second) { // if the city inserted successfully
         // Insert the city into the map
         cityMap.insert({ name, result.first });
-    }
-    else {
-        cout << "++++++++++++++++++++++++++++++" << std::endl;
-        city.print();
-        cout << "++++++++++++++++++++++++++++++" << std::endl;
-        std::cout << "Failed to add city: " << name << std::endl;
     }
 }
 
@@ -71,42 +73,63 @@ void CitiesMap::deleteCity(const std::string& name)
         // erase the city from the map:
         cityMap.erase(cityInMapIterator); // run time is O(1) for map deletion
     }
-    else // case the city is not in the map:
-    {
-        std::cout << "City: " << name << " not found." << std::endl;
-    }
 }
 
 void CitiesMap::readCitiesFromFile(const std::string& filename) {
+    if (!std::filesystem::exists(filename)) {
+        throw std::invalid_argument("File path does not exist.");
+    }
+
     std::ifstream file(filename);
     if (!file) {
-        std::cout << "Failed to open the file: " << filename << std::endl;
-        return;
+        throw std::runtime_error("Failed to open the file: " + filename);
     }
+
+    file.seekg(0, std::ios::end);
+    if (file.tellg() == 0) {
+        throw std::runtime_error("File is empty.");
+    }
+    file.seekg(0, std::ios::beg);
+
     std::string line;
     std::string cityName;
     double x, y;
     bool readName = true; // flag to indicate if the next line is a city name or coordinates
 
+    int line_number = 0; // to track the line number for the exception
     while (std::getline(file, line)) {
-        if (readName) {
-            cityName = line;
-            readName = false;
+        line_number++; // increment the line number for each read line
+
+        try {
+            if (readName) {
+                cityName = line;
+                if (!std::isalpha(cityName[0])) {
+                    throw std::invalid_argument("Invalid city name format at line " + std::to_string(line_number) + ": " + line);
+                }
+                readName = false;
+            }
+            else {
+                char hyphenCharacter; // will contain the hyphen character
+
+                std::stringstream ss(line); // ss is a stream that contains the line (like cin)
+                if (!(ss >> x >> hyphenCharacter >> y)) {
+                    throw std::invalid_argument("Invalid data format at line " + std::to_string(line_number) + ": " + line);
+                }
+
+                // add the city to the map if the city is not already in the map:
+                if (cityMap.find(cityName) == cityMap.end()) {
+                    addCity(cityName, x, y);
+                }
+                else {
+                    std::cout << "City: " << cityName << " already exists." << std::endl;
+                }
+                readName = true;
+            }
         }
-        else {
-            char hyphenCharacter; // will containt the hyphen character
-
-            std::stringstream ss(line); // ss is a stream that contains the line (like cin)
-            ss >> x >> hyphenCharacter >> y;
-
-            // add the city to the map if the city is not already in the map:
-            if (cityMap.find(cityName) == cityMap.end()) {
-                addCity(cityName, x, y);
-            }
-            else { 
-                std::cout << "City: " << cityName << " already exists." << std::endl;
-            }
-            readName = true;
+        catch (const std::exception& e) {
+            std::cerr << "Exception: " << e.what() << '\n';
+            file.close();
+            throw; // rethrow the exception to the caller
         }
     }
 
@@ -116,6 +139,8 @@ void CitiesMap::readCitiesFromFile(const std::string& filename) {
 
 
 
+
+// print all the cities in the dataset:
 void CitiesMap::printAllCities() const {
 
     std::set<City>::iterator it = citySet.begin();
@@ -129,10 +154,12 @@ void CitiesMap::printAllCities() const {
 }
 
 
-// printCity:
+// print the detais of a city by name:
 void CitiesMap::printCity(const std::string& name) const {
+
     // find the city in map:
     auto cityInMapIterator = cityMap.find(name); // the iterator in the map 
+
     // checking if the city is in the map:
     if (cityInMapIterator != cityMap.end()) // case the city is in the unordered_map structure
     {
@@ -322,7 +349,7 @@ int CitiesMap::get_option_from_user(int min, int max) const
 void CitiesMap::add_city_user_interface()
 {
     std::string name;
-    std::cout << "Please enter the city name. than, press enter." << std::endl;
+    std::cout << "Please enter the city name, then press enter." << std::endl;
 
     std::cin.ignore(); // ignore the enter from the previous input
 
@@ -341,17 +368,27 @@ void CitiesMap::add_city_user_interface()
     }
 
     double x_axis = -1, y_axis = -1;
-    std::cout << "Please enter the city coordinates (positive numbers separated by space). then, press enter." << std::endl;
+    std::cout << "Please enter the city coordinates (positive numbers separated by space), then press enter." << std::endl;
 
     // Ignore all the spaces and tabs before the input
     std::cin >> x_axis;
+    if (std::cin.fail()) {
+        std::cin.clear();
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        throw std::invalid_argument("Invalid input for x-axis coordinate");
+    }
+
     std::cin >> y_axis;
+    if (std::cin.fail()) {
+        std::cin.clear();
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        throw std::invalid_argument("Invalid input for y-axis coordinate");
+    }
 
     while (x_axis < 0 || y_axis < 0)
     {
-        std::cout << "Invalid coordinates. Please enter the city coordinates (positive numbers separated by space). then, press enter." << std::endl;
-        std::cin >> x_axis;
-        std::cin >> y_axis;
+        std::cout << "Invalid coordinates. Please enter the city coordinates (positive numbers separated by space), then press enter." << std::endl;
+        std::cin >> x_axis >> y_axis;
     }
 
 
@@ -413,10 +450,13 @@ void CitiesMap::search_city_user_interface()
 }
 
 // search for nearby cities user interface:
+#include <exception>
+#include <limits>
+
 void CitiesMap::search_nearby_cities_user_interface()
 {
     std::string name;
-    std::cout << "Please enter the city name. than, press enter." << std::endl;
+    std::cout << "Please enter the city name. then, press enter." << std::endl;
 
     // get the name from the user
     std::cin.ignore();
@@ -429,26 +469,32 @@ void CitiesMap::search_nearby_cities_user_interface()
         {
             return;
         }
-        std::cout << name << " does not exists in the dataset." << std::endl;
-        std::cout << "Please enter the city name. than, press enter." << std::endl;
+        std::cout << name << " does not exist in the dataset." << std::endl;
+        std::cout << "Please enter the city name. then, press enter." << std::endl;
         std::getline(std::cin, name);
     }
 
     // get the radius from the user
     double radius;
-    std::cout << "Please enter the radius. than, press enter." << std::endl;
+    std::cout << "Please enter the radius. then, press enter." << std::endl;
     std::cin >> radius;
+
+    if (std::cin.fail()) {
+        std::cin.clear();
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        throw std::invalid_argument("Invalid input for radius");
+    }
 
     // while the radius is not positive:
     while (radius <= 0)
     {
-        std::cout << "Invalid radius. Please enter the radius. than, press enter." << std::endl;
+        std::cout << "Invalid radius. Please enter the radius. then, press enter." << std::endl;
         std::cin >> radius;
     }
 
     // get the distance type from the user
     int distance_option;
-    std::cout << "Please choose the distance type. than, press enter." << std::endl;
+    std::cout << "Please choose the distance type. then, press enter." << std::endl;
     std::cout << "0. Euclidean distance" << std::endl;
     std::cout << "1. Manhattan distance" << std::endl;
     std::cout << "2. Chebyshev distance" << std::endl;
@@ -458,20 +504,23 @@ void CitiesMap::search_nearby_cities_user_interface()
     // while the distance type is not valid:
     while (distance_option == -1)
     {
-        std::cout << "Invalid distance type. Please choose the distance type. than, press enter." << std::endl;
+        std::cout << "Invalid distance type. Please choose the distance type. then, press enter." << std::endl;
         std::cout << "0. Euclidean distance" << std::endl;
         std::cout << "1. Manhattan distance" << std::endl;
         std::cout << "2. Chebyshev distance" << std::endl;
         distance_option = get_option_from_user(0, 2); // input between 0 to 2
     }
+
     // print the nearby cities
     this->printNearbyCities(name, radius, distance_option);
+
     // pressing enter to return to main menu:
     std::cout << "Press enter to return to main menu." << std::endl;
     std::cin.ignore(); // ignore the enter from the previous input
     std::cin.get(); // get the enter from the user
     return;
 }
+
 
 
 
